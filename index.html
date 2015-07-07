@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  margin: auto;
+}
+
+div#main {
+  width: 720px;
+  margin: auto;
+  display: block;
+  overflow: inline;
+}
+
+header {
+  padding: 6px 0;
+}
+
+.group {
+  margin-bottom: 1em;
+}
+
+.axis {
+  font: 10px sans-serif;
+  position: fixed;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.axis text {
+  -webkit-transition: fill-opacity 250ms linear;
+}
+
+.axis path {
+  display: none;
+}
+
+.axis line {
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis.top {
+  background-image: linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  top: 0px;
+  padding: 0 0 24px 0;
+}
+
+.axis.bottom {
+  background-image: linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  bottom: 0px;
+  padding: 24px 0 0 0;
+}
+
+.horizon {
+  border-bottom: solid 1px #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.horizon {
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+}
+
+.horizon + .horizon {
+  border-top: none;
+}
+
+.horizon canvas {
+  display: block;
+}
+
+.horizon .title,
+.horizon .value {
+  bottom: 0;
+  line-height: 30px;
+  margin: 0 6px;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+.horizon .title {
+  left: 0;
+}
+
+.horizon .value {
+  right: 0;
+}
+
+.line {
+  background: #000;
+  z-index: 2;
+}
+
+.tabs {
+  width: 740px;
+  float: none;
+  list-style: none;
+  position: relative;
+  margin: 80px 0 0 10px;
+  text-align: left;
+}
+
+.tabs li {
+  float: left;
+  display: block;
+}
+.tabs input[type="radio"] {
+  display: none;
+}
+.tabs label {
+  display: block;
+  padding: 14px 21px;
+  border-radius: 2px 2px 0 0;
+  font-size: 20px;
+  background: #d0d0d0;
+  cursor: pointer;
+  position: relative;
+  top: 4px;
+  -moz-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+.tabs label:hover {
+  background: #dfdfdf;
+}
+.tabs .tab-content {
+  z-index: 2;
+  display: none;
+  overflow: hidden;
+  width: 100%;
+  font-size: 17px;
+  line-height: 25px;
+  padding: 25px;
+  position: absolute;
+  top: 53px;
+  left: 0;
+  background: #c0c0c0;
+}
+.tabs [id^="tab"]:checked + label {
+  top: 0;
+  padding-top: 17px;
+  background: #c0c0c0;
+}
+.tabs [id^="tab"]:checked ~ [id^="tab-content"] {
+  display: block;
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cubism/1.6.0/cubism.v1.min.js"></script>
+<body>
+<div id="main"><ul class="tabs"></ul></div>
+<script language="JavaScript">
+var _delay = 120 * 1000;
+var context = cubism.context().step(_delay).size(720).serverDelay(_delay).clientDelay(_delay).stop();
+var horizon = context.horizon().extent([-2, 2]).colors(["#990000", "#cccccc", "#cccccc", "#007900"]);
+
+d3.json('config.json', function(config) {
+  config.tabs.forEach(function(tab, tabIndex) {
+    d3.select("div#main ul")
+      .selectAll('li.graph')
+      .data([tab])
+      .enter()
+      .append('li', 'graph')
+      .html(function(t) {
+          return '<input type="radio" name="tabs" id="tab' + tabIndex + '"' + (tabIndex === 0 ? ' checked' : '') + '/><label for="tab' + tabIndex + '">' + t.name + '</label><div id="tab-content' + tabIndex + '" class="tab-content"><div class="horizon"></div>';
+      });
+
+
+    d3.select('#tab-content' + tabIndex).selectAll(".horizon")
+      .data(tab.jobs.map(jenkins))
+      .enter()
+      .insert("div", ".bottom").attr("class", "horizon")
+      .call(horizon);
+  });
+
+  function jenkins(jobname) {
+    return context.metric(function(start, stop, step, callback) {
+      var values = [], failures = [], totals = [];
+
+      // console.log("start/stop/step: " + start.valueOf() + ", " + stop.valueOf() + ", " + step);
+      // coerce the arguments into Numeric values
+      start = +start.valueOf();
+      stop = +stop.valueOf();
+      step = +step;
+
+      var jobURL = config.jenkins.url + '/job/' + jobname + '/api/json?tree=builds[id,result,building,timestamp,action[*]]';
+      if ((stop - start) == step) {
+        jobURL += '{0,2}'
+      }
+
+      var u = config.jenkins.auth.username, p = config.jenkins.auth.password;
+      d3.json(jobURL).header('Authorization', 'Basic ' + btoa(u + ':' + p)).get(function(error, job) {
+        var i = 0;
+
+        // pre-process this job's builds so that we know how many tests ran
+        // (and failed) for each build
+        /* disabled for now, since we aren't using this data
+        totals = job.builds.map(function(b) {
+          return b.actions.filter(function(a) {
+            return ('totalCount' in a);
+          }).map(function (a) {
+            return a['totalCount'];
+          })
+        });
+        failures = job.builds.map(function(b) {
+          return b.actions.filter(function(a) {
+            return ('failCount' in a);
+          }).map(function (a) {
+            return a['failCount'];
+          })
+        });
+        */
+
+        // have to figure out the tabIndex from the job name...
+        var tabIndex = config.tabs.filter(function(t) { return t.jobs.indexOf(jobname) > -1; }).map(function(t, i) { return i; })[0];
+
+        d3.select("#tab-content" + tabIndex).selectAll("div." + jobname)
+          .data(job.builds.filter(function (b) { return b.result === "FAILURE" && b.timestamp > start; })).enter()
+          .append('div').attr('class', jobname)
+          .html(function(b) {
+            return '<a href="' + config.jenkins.url + '/job/' + jobname + '/' + b.id + '">' + jobname + ' build #' + b.id + ' failure</a>';
+          });
+
+        while (stop > start) {
+          var build = job.builds[i]
+          // ignore unfinished builds - we need results, dammit!
+          if (build.building === true) { build = job.builds[++i]; }
+          var ts = +build.timestamp;
+          var result;
+          if (job.builds[i].result === "SUCCESS") {
+            result = 2;
+          } else {
+            result = -2;
+          }
+          while (stop > ts) {
+            values.push(result);
+            stop -= step;
+          }
+          if (ts > stop && i < job.builds.length) {
+            ++i;
+          }
+        }
+
+        // If there aren't enough results for the past 24h, fill the
+        // rest in with 0
+        while (values.length < context.size()) {
+          values.push(0);
+        }
+        values = values.reverse();
+
+        callback(null, values);
+      });
+    }, jobname);
+  }
+});
+</script>
+</body>

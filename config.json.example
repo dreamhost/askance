@@ -1,0 +1,25 @@
+{
+	"jenkins": {
+		"auth": {
+			"username": "jenkins",
+			"password": "password"
+		},
+		"url": "http://jenkins"
+	},
+	"tabs": [
+		{
+			"name": "dev",
+			"jobs": [
+				"dev-job1",
+				"dev-job2"
+			]
+		},
+		{
+			"name": "qa",
+			"jobs": [
+				"qa-job1",
+				"qa-job2"
+			]
+		}
+	]
+}
