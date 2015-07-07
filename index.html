@@ -174,7 +174,7 @@ header {
 <div id="main"><ul class="tabs"></ul></div>
 <script language="JavaScript">
 var _delay = 120 * 1000;
-var context = cubism.context().step(_delay).size(720).serverDelay(_delay).clientDelay(_delay).stop();
+var context = cubism.context().step(_delay).size(720).serverDelay(_delay).clientDelay(_delay);
 var horizon = context.horizon().extent([-2, 2]).colors(["#990000", "#cccccc", "#cccccc", "#007900"]);
 
 d3.json('config.json', function(config) {
@@ -235,7 +235,7 @@ d3.json('config.json', function(config) {
         */
 
         // have to figure out the tabIndex from the job name...
-        var tabIndex = config.tabs.filter(function(t) { return t.jobs.indexOf(jobname) > -1; }).map(function(t, i) { return i; })[0];
+        var tabIndex = config.tabs.map(function(t, i) { if (t.jobs.indexOf(jobname) > -1) { return i; } else { return -1; } }).filter(function(t) { return t > -1; })[0];
 
         d3.select("#tab-content" + tabIndex).selectAll("div." + jobname)
           .data(job.builds.filter(function (b) { return b.result === "FAILURE" && b.timestamp > start; })).enter()
