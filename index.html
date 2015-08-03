@@ -16,7 +16,7 @@ body {
 }
 
 div#main {
-  width: 720px;
+  width: 770px;
   margin: auto;
   display: block;
   overflow: inline;
@@ -113,7 +113,7 @@ header {
 }
 
 .tabs {
-  width: 740px;
+  width: 770px;
   float: none;
   list-style: none;
   position: relative;
@@ -185,7 +185,7 @@ d3.json('config.json', function(config) {
       .enter()
       .append('li', 'graph')
       .html(function(t) {
-          return '<input type="radio" name="tabs" id="tab' + tabIndex + '"' + (tabIndex === 0 ? ' checked' : '') + '/><label for="tab' + tabIndex + '">' + t.name + '</label><div id="tab-content' + tabIndex + '" class="tab-content"><div class="horizon"></div>';
+          return '<input type="radio" name="tabs" id="tab' + tabIndex + '"' + (tabIndex === 0 ? ' checked' : '') + '/><label for="tab' + tabIndex + '">' + t.name + '</label><div id="tab-content' + tabIndex + '" class="tab-content">';
       });
 
 
@@ -197,6 +197,7 @@ d3.json('config.json', function(config) {
   });
 
   function jenkins(jobname) {
+    var first = true;
     return context.metric(function(start, stop, step, callback) {
       var values = [], failures = [], totals = [];
 
@@ -207,7 +208,8 @@ d3.json('config.json', function(config) {
       step = +step;
 
       var jobURL = config.jenkins.url + '/job/' + jobname + '/api/json?tree=builds[id,result,building,timestamp,action[*]]';
-      if ((stop - start) == step) {
+
+      if (!first) {
         jobURL += '{0,2}'
       }
 
@@ -266,9 +268,13 @@ d3.json('config.json', function(config) {
 
         // If there aren't enough results for the past 24h, fill the
         // rest in with 0
-        while (values.length < context.size()) {
-          values.push(0);
+        if (first) {
+          while (values.length < context.size()) {
+            values.push(0);
+          }
         }
+        first = false;
+
         values = values.reverse();
 
         callback(null, values);
