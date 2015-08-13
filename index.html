@@ -215,6 +215,7 @@ d3.json('config.json', function(config) {
 
       var u = config.jenkins.auth.username, p = config.jenkins.auth.password;
       d3.json(jobURL).header('Authorization', 'Basic ' + btoa(u + ':' + p)).get(function(error, job) {
+        if (error) { return console.warn(error); }
         var i = 0;
 
         // pre-process this job's builds so that we know how many tests ran
