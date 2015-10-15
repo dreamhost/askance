@@ -13,5 +13,6 @@ An at-a-glance dashboard showing the status of a configurable set of Jenkins job
 4. Done!
 
 ### Jenkins installation
-NOTE: Not tested yet! Theoretically it should be possible to host this inside the Jenkins server.
-1. It should be possible to create a directory containing `config.json` and `index.html` inside `$JENKINS_HOME/userContent`, which would then be available from the Jenkins server.
+1. Check out the askance repo (including `config.json.example` and `index.html`) inside `$JENKINS_HOME/userContent`
+2. Copy `config.json.example` to `config.json` and edit for your Jenkins details
+3. Load `https://$YOUR_JENKINS_SERVER/userContent/askance/index.html` to see your jobs and tabs!
